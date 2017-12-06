@@ -23,13 +23,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.sunshine.ForecastAdapter.ForecastAdapterOnClickHandler;
 import com.example.android.sunshine.data.SunshinePreferences;
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
          * languages.
          */
         LinearLayoutManager layoutManager
-                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+                = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
 
         mRecyclerView.setLayoutManager(layoutManager);
 
@@ -122,8 +122,8 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
     public void onClick(String weatherForDay) {
         Context context = this;
         Class destinationClass = DetailActivity.class;
-        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
+        Intent intentToStartDetailActivity = new Intent(context,destinationClass);
+        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT,weatherForDay);
         startActivity(intentToStartDetailActivity);
     }
 
@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
                         .getResponseFromHttpUrl(weatherRequestUrl);
 
                 String[] simpleJsonWeatherData = OpenWeatherJsonUtils
-                        .getSimpleWeatherStringsFromJson(MainActivity.this, jsonWeatherResponse);
+                        .getSimpleWeatherStringsFromJson(MainActivity.this,jsonWeatherResponse);
 
                 return simpleJsonWeatherData;
 
@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
         MenuInflater inflater = getMenuInflater();
         /* Use the inflater's inflate method to inflate our menu layout to this menu */
-        inflater.inflate(R.menu.forecast, menu);
+        inflater.inflate(R.menu.forecast,menu);
         /* Return true so that the menu is displayed in the Toolbar */
         return true;
     }
@@ -221,8 +221,30 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
             return true;
         }
 
-        // TODO (2) Launch the map when the map menu item is clicked
+        // COMPLETED (2) Launch the map when the map menu item is clicked
+        if (id == R.id.action_open_map) {
+            openMapWithLocations();
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
+
+    private void openMapWithLocations() {
+
+
+        String address = "Meşrutiyey Mahallesi Şişli";
+        Uri geoLocation = Uri.parse("geo:0,0?q=" + address);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(this,"Something is  wrong",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
 }
