@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
 
     private ProgressBar mLoadingIndicator;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,7 +120,8 @@ public class MainActivity extends AppCompatActivity implements ForecastAdapterOn
         Context context = this;
         Class destinationClass = DetailActivity.class;
         Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-        // TODO (1) Pass the weather to the DetailActivity
+        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
+        // COMPLETED (1) Pass the weather to the DetailActivity
         startActivity(intentToStartDetailActivity);
     }
 
