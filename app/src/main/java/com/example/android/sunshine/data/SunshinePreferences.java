@@ -16,6 +16,9 @@
 package com.example.android.sunshine.data;
 
 import android.content.Context;
+import android.support.v7.preference.PreferenceManager;
+
+import com.example.android.sunshine.R;
 
 public class SunshinePreferences {
 
@@ -37,7 +40,7 @@ public class SunshinePreferences {
      * we provide some default values to work with.
      */
     private static final String DEFAULT_WEATHER_LOCATION = "94043,USA";
-    private static final double[] DEFAULT_WEATHER_COORDINATES = {37.4284, 122.0724};
+    private static final double[] DEFAULT_WEATHER_COORDINATES = {37.4284,122.0724};
 
     private static final String DEFAULT_MAP_LOCATION =
             "1600 Amphitheatre Parkway, Mountain View, CA 94043";
@@ -51,7 +54,7 @@ public class SunshinePreferences {
      * @param lat      The latitude of the city
      * @param lon      The longitude of the city
      */
-    static public void setLocationDetails(Context c, String cityName, double lat, double lon) {
+    static public void setLocationDetails(Context c,String cityName,double lat,double lon) {
         /** This will be implemented in a future lesson **/
     }
 
@@ -64,7 +67,7 @@ public class SunshinePreferences {
      * @param lat             The latitude of the city
      * @param lon             The longitude of the city
      */
-    static public void setLocation(Context c, String locationSetting, double lat, double lon) {
+    static public void setLocation(Context c,String locationSetting,double lat,double lon) {
         /** This will be implemented in a future lesson **/
     }
 
@@ -87,22 +90,34 @@ public class SunshinePreferences {
      * "94043,USA" if SharedPreferences have not been implemented yet.
      */
     public static String getPreferredWeatherLocation(Context context) {
-        // TODO (1) Return the user's preferred location
+        // COMPLETED (1) Return the user's preferred location
         /** This will be implemented in a future lesson **/
-        return getDefaultWeatherLocation();
+        String keyForLocation = context.getString(R.string.pref_location_key);
+        String defaultLocation = context.getString(R.string.pref_location_default);
+        return PreferenceManager
+                .getDefaultSharedPreferences(context).getString(keyForLocation,defaultLocation);
     }
 
     /**
      * Returns true if the user has selected metric temperature display.
      *
      * @param context Context used to get the SharedPreferences
-     *
      * @return true If metric display should be used
      */
     public static boolean isMetric(Context context) {
-        // TODO (2) Return true if the user's preference for units is metric, false otherwise
+        // COMPLETED (2) Return true if the user's preference for units is metric, false otherwise
         /** This will be implemented in a future lesson **/
-        return true;
+        String keyForUnits = context.getString(R.string.pref_units_key);
+        String defaultUnits = context.getString(R.string.pref_units_metric);
+        String preferredUnits = PreferenceManager
+                .getDefaultSharedPreferences(context).getString(keyForUnits,defaultUnits);
+        boolean userPrefersMetric;
+        if (context.getString(R.string.pref_units_metric).equals(preferredUnits)) {
+            userPrefersMetric = true;
+        } else {
+            userPrefersMetric = false;
+        }
+        return userPrefersMetric;
     }
 
     /**
