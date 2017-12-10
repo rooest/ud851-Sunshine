@@ -49,11 +49,21 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.detail, menu);
+        getMenuInflater().inflate(R.menu.detail,menu);
         MenuItem menuItem = menu.findItem(R.id.action_share);
         menuItem.setIntent(createShareForecastIntent());
         return true;
     }
 
-    // TODO (7) Launch SettingsActivity when the Settings option is clicked
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // COMPLETED (7) Launch SettingsActivity when the Settings option is clicked
+        if (item.getItemId() == R.id.action_settings) {
+            startActivity(new Intent(DetailActivity.this,SettingsActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+
+    }
+
 }
