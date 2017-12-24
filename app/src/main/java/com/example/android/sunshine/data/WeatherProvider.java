@@ -20,8 +20,14 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+
+import com.example.android.sunshine.utilities.SunshineDateUtils;
+
+import static com.example.android.sunshine.data.WeatherContract.WeatherEntry.COLUMN_DATE;
+import static com.example.android.sunshine.data.WeatherContract.WeatherEntry.TABLE_NAME;
 
 /**
  * This class serves as the ContentProvider for all of Sunshine's data. This class allows us to
@@ -84,14 +90,14 @@ public class WeatherProvider extends ContentProvider {
          */
 
         /* This URI is content://com.example.android.sunshine/weather/ */
-        matcher.addURI(authority, WeatherContract.PATH_WEATHER, CODE_WEATHER);
+        matcher.addURI(authority,WeatherContract.PATH_WEATHER,CODE_WEATHER);
 
         /*
          * This URI would look something like content://com.example.android.sunshine/weather/1472214172
          * The "/#" signifies to the UriMatcher that if PATH_WEATHER is followed by ANY number,
          * that it should return the CODE_WEATHER_WITH_DATE code
          */
-        matcher.addURI(authority, WeatherContract.PATH_WEATHER + "/#", CODE_WEATHER_WITH_DATE);
+        matcher.addURI(authority,WeatherContract.PATH_WEATHER + "/#",CODE_WEATHER_WITH_DATE);
 
         return matcher;
     }
@@ -100,11 +106,11 @@ public class WeatherProvider extends ContentProvider {
      * In onCreate, we initialize our content provider on startup. This method is called for all
      * registered content providers on the application main thread at application launch time.
      * It must not perform lengthy operations, or application startup will be delayed.
-     *
+     * <p>
      * Nontrivial initialization (such as opening, upgrading, and scanning
      * databases) should be deferred until the content provider is used (via {@link #query},
-     * {@link #bulkInsert(Uri, ContentValues[])}, etc).
-     *
+     * {@link #bulkInsert(Uri,ContentValues[])}, etc).
+     * <p>
      * Deferred initialization keeps application startup fast, avoids unnecessary work if the
      * provider turns out not to be needed, and stops database errors (such as a full disk) from
      * halting application launch.
@@ -122,7 +128,8 @@ public class WeatherProvider extends ContentProvider {
         return true;
     }
 
-//  TODO (1) Implement the bulkInsert method
+//  COMPLETED (1) Implement the bulkInsert method
+
     /**
      * Handles requests to insert a set of new rows. In Sunshine, we are only going to be
      * inserting multiple rows of data at a time from a weather forecast. There is no use case
@@ -133,18 +140,43 @@ public class WeatherProvider extends ContentProvider {
      * @param uri    The content:// URI of the insertion request.
      * @param values An array of sets of column_name/value pairs to add to the database.
      *               This must not be {@code null}.
-     *
      * @return The number of values that were inserted.
      */
     @Override
-    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
+    public int bulkInsert(@NonNull Uri uri,@NonNull ContentValues[] values) {
         throw new RuntimeException("Student, you need to implement the bulkInsert method!");
 
-//          TODO (2) Only perform our implementation of bulkInsert if the URI matches the CODE_WEATHER code
+        final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 
-//              TODO (3) Return the number of rows inserted from our implementation of bulkInsert
+//          COMPLETED (2) Only perform our implementation of bulkInsert if the URI matches the CODE_WEATHER code
 
-//          TODO (4) If the URI does match match CODE_WEATHER, return the super implementation of bulkInsert
+        switch (sUriMatcher.match(uri)) {
+            case CODE_WEATHER:
+
+                db.beginTransaction();
+                int rownserted = 0;
+                //              COMPLETED (3) Return the number of rows inserted from our implementation of bulkInsert
+                for (ContentValues value : values) {
+                    long weatherDate = value.getAsLong(COLUMN_DATE);
+                    if (!SunshineDateUtils.isDateNormalized(weatherDate)) {
+                        throw new IllegalArgumentException("Date must be normalized to insert");
+                    }
+
+                    long _id = db.insert(TABLE_NAME,null,value);
+                    if (_id != -1) {
+                        rownserted++;
+                    }
+                }
+                db.setTransactionSuccessful();
+
+                break;
+            //          COMPLETED (4) If the URI does match match CODE_WEATHER, return the super implementation of bulkInsert
+            default:
+                return super.bulkInsert(uri,values);
+
+        }
+
+
     }
 
     /**
@@ -163,8 +195,8 @@ public class WeatherProvider extends ContentProvider {
      * @return A Cursor containing the results of the query. In our implementation,
      */
     @Override
-    public Cursor query(@NonNull Uri uri, String[] projection, String selection,
-                        String[] selectionArgs, String sortOrder) {
+    public Cursor query(@NonNull Uri uri,String[] projection,String selection,
+                        String[] selectionArgs,String sortOrder) {
 
         Cursor cursor;
 
@@ -223,7 +255,7 @@ public class WeatherProvider extends ContentProvider {
                          * within the selectionArguments array will be inserted into the
                          * selection statement by SQLite under the hood.
                          */
-                        WeatherContract.WeatherEntry.COLUMN_DATE + " = ? ",
+                        COLUMN_DATE + " = ? ",
                         selectionArguments,
                         null,
                         null,
@@ -260,7 +292,7 @@ public class WeatherProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
 
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        cursor.setNotificationUri(getContext().getContentResolver(),uri);
         return cursor;
     }
 
@@ -273,7 +305,7 @@ public class WeatherProvider extends ContentProvider {
      * @return The number of rows deleted
      */
     @Override
-    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
+    public int delete(@NonNull Uri uri,String selection,String[] selectionArgs) {
         throw new RuntimeException("Student, you need to implement the delete method!");
     }
 
@@ -304,13 +336,13 @@ public class WeatherProvider extends ContentProvider {
      * @return nothing in Sunshine, but normally the URI for the newly inserted item.
      */
     @Override
-    public Uri insert(@NonNull Uri uri, ContentValues values) {
+    public Uri insert(@NonNull Uri uri,ContentValues values) {
         throw new RuntimeException(
                 "We are not implementing insert in Sunshine. Use bulkInsert instead");
     }
 
     @Override
-    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    public int update(@NonNull Uri uri,ContentValues values,String selection,String[] selectionArgs) {
         throw new RuntimeException("We are not implementing update in Sunshine");
     }
 
