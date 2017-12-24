@@ -144,7 +144,6 @@ public class WeatherProvider extends ContentProvider {
      */
     @Override
     public int bulkInsert(@NonNull Uri uri,@NonNull ContentValues[] values) {
-        throw new RuntimeException("Student, you need to implement the bulkInsert method!");
 
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 
@@ -172,9 +171,9 @@ public class WeatherProvider extends ContentProvider {
                 break;
             //          COMPLETED (4) If the URI does match match CODE_WEATHER, return the super implementation of bulkInsert
             default:
-                return super.bulkInsert(uri,values);
-
+                throw new RuntimeException("Student, you need to implement the bulkInsert method!");
         }
+        return super.bulkInsert(uri,values);
 
 
     }
