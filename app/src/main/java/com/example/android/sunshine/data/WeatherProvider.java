@@ -26,6 +26,8 @@ import android.support.annotation.NonNull;
 
 import com.example.android.sunshine.utilities.SunshineDateUtils;
 
+import static com.example.android.sunshine.data.WeatherContract.WeatherEntry.TABLE_NAME;
+
 /**
  * This class serves as the ContentProvider for all of Sunshine's data. This class allows us to
  * bulkInsert data, query data, and delete data.
@@ -87,14 +89,14 @@ public class WeatherProvider extends ContentProvider {
          */
 
         /* This URI is content://com.example.android.sunshine/weather/ */
-        matcher.addURI(authority, WeatherContract.PATH_WEATHER, CODE_WEATHER);
+        matcher.addURI(authority,WeatherContract.PATH_WEATHER,CODE_WEATHER);
 
         /*
          * This URI would look something like content://com.example.android.sunshine/weather/1472214172
          * The "/#" signifies to the UriMatcher that if PATH_WEATHER is followed by ANY number,
          * that it should return the CODE_WEATHER_WITH_DATE code
          */
-        matcher.addURI(authority, WeatherContract.PATH_WEATHER + "/#", CODE_WEATHER_WITH_DATE);
+        matcher.addURI(authority,WeatherContract.PATH_WEATHER + "/#",CODE_WEATHER_WITH_DATE);
 
         return matcher;
     }
@@ -103,11 +105,11 @@ public class WeatherProvider extends ContentProvider {
      * In onCreate, we initialize our content provider on startup. This method is called for all
      * registered content providers on the application main thread at application launch time.
      * It must not perform lengthy operations, or application startup will be delayed.
-     *
+     * <p>
      * Nontrivial initialization (such as opening, upgrading, and scanning
      * databases) should be deferred until the content provider is used (via {@link #query},
-     * {@link #bulkInsert(Uri, ContentValues[])}, etc).
-     *
+     * {@link #bulkInsert(Uri,ContentValues[])}, etc).
+     * <p>
      * Deferred initialization keeps application startup fast, avoids unnecessary work if the
      * provider turns out not to be needed, and stops database errors (such as a full disk) from
      * halting application launch.
@@ -135,11 +137,10 @@ public class WeatherProvider extends ContentProvider {
      * @param uri    The content:// URI of the insertion request.
      * @param values An array of sets of column_name/value pairs to add to the database.
      *               This must not be {@code null}.
-     *
      * @return The number of values that were inserted.
      */
     @Override
-    public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
+    public int bulkInsert(@NonNull Uri uri,@NonNull ContentValues[] values) {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
 
         switch (sUriMatcher.match(uri)) {
@@ -155,7 +156,7 @@ public class WeatherProvider extends ContentProvider {
                             throw new IllegalArgumentException("Date must be normalized to insert");
                         }
 
-                        long _id = db.insert(WeatherContract.WeatherEntry.TABLE_NAME, null, value);
+                        long _id = db.insert(TABLE_NAME,null,value);
                         if (_id != -1) {
                             rowsInserted++;
                         }
@@ -166,13 +167,13 @@ public class WeatherProvider extends ContentProvider {
                 }
 
                 if (rowsInserted > 0) {
-                    getContext().getContentResolver().notifyChange(uri, null);
+                    getContext().getContentResolver().notifyChange(uri,null);
                 }
 
                 return rowsInserted;
 
             default:
-                return super.bulkInsert(uri, values);
+                return super.bulkInsert(uri,values);
         }
     }
 
@@ -192,8 +193,8 @@ public class WeatherProvider extends ContentProvider {
      * @return A Cursor containing the results of the query. In our implementation,
      */
     @Override
-    public Cursor query(@NonNull Uri uri, String[] projection, String selection,
-                        String[] selectionArgs, String sortOrder) {
+    public Cursor query(@NonNull Uri uri,String[] projection,String selection,
+                        String[] selectionArgs,String sortOrder) {
 
         Cursor cursor;
 
@@ -235,7 +236,7 @@ public class WeatherProvider extends ContentProvider {
 
                 cursor = mOpenHelper.getReadableDatabase().query(
                         /* Table we are going to query */
-                        WeatherContract.WeatherEntry.TABLE_NAME,
+                        TABLE_NAME,
                         /*
                          * A projection designates the columns we want returned in our Cursor.
                          * Passing null will return all columns of data within the Cursor.
@@ -274,7 +275,7 @@ public class WeatherProvider extends ContentProvider {
              */
             case CODE_WEATHER: {
                 cursor = mOpenHelper.getReadableDatabase().query(
-                        WeatherContract.WeatherEntry.TABLE_NAME,
+                        TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
@@ -289,11 +290,12 @@ public class WeatherProvider extends ContentProvider {
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
 
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        cursor.setNotificationUri(getContext().getContentResolver(),uri);
         return cursor;
     }
 
-//  TODO (1) Implement the delete method of the ContentProvider
+//  COMPLETED (1) Implement the delete method of the ContentProvider
+
     /**
      * Deletes data at a given URI with optional arguments for more fine tuned deletions.
      *
@@ -303,12 +305,30 @@ public class WeatherProvider extends ContentProvider {
      * @return The number of rows deleted
      */
     @Override
-    public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
-        throw new RuntimeException("Student, you need to implement the delete method!");
+    public int delete(@NonNull Uri uri,String selection,String[] selectionArgs) {
 
-//          TODO (2) Only implement the functionality, given the proper URI, to delete ALL rows in the weather table
+        SQLiteDatabase database = mOpenHelper.getWritableDatabase();
 
-//      TODO (3) Return the number of rows deleted
+        int numForDelete = 0;
+        if (selection == null) selection = "1";
+
+//          COMPLETED (2) Only implement the functionality, given the proper URI, to delete ALL rows in the weather table
+
+        switch (sUriMatcher.match(uri)) {
+            case CODE_WEATHER:
+                database.delete(TABLE_NAME,selection,selectionArgs);
+
+                break;
+            default:
+                throw new RuntimeException("Student, you need to implement the delete method!");
+        }
+
+//      COMPLTED (3) Return the number of rows deleted
+        if (numForDelete != 0) {
+            getContext().getContentResolver().notifyChange(uri,null);
+        }
+
+        return numForDelete;
     }
 
     /**
@@ -338,13 +358,13 @@ public class WeatherProvider extends ContentProvider {
      * @return nothing in Sunshine, but normally the URI for the newly inserted item.
      */
     @Override
-    public Uri insert(@NonNull Uri uri, ContentValues values) {
+    public Uri insert(@NonNull Uri uri,ContentValues values) {
         throw new RuntimeException(
                 "We are not implementing insert in Sunshine. Use bulkInsert instead");
     }
 
     @Override
-    public int update(@NonNull Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    public int update(@NonNull Uri uri,ContentValues values,String selection,String[] selectionArgs) {
         throw new RuntimeException("We are not implementing update in Sunshine");
     }
 
