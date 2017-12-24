@@ -33,8 +33,9 @@ import com.example.android.sunshine.data.WeatherContract;
 import com.example.android.sunshine.utilities.SunshineDateUtils;
 import com.example.android.sunshine.utilities.SunshineWeatherUtils;
 
-public class DetailActivity extends AppCompatActivity {
-//      TODO (21) Implement LoaderManager.LoaderCallbacks<Cursor>
+public class DetailActivity extends AppCompatActivity implements
+        LoaderManager.LoaderCallbacks<Cursor> {
+//      COMPLETED (21) Implement LoaderManager.LoaderCallbacks<Cursor>
 
     /*
      * In this Activity, you can share the selected day's forecast. No social sharing is complete
@@ -42,49 +43,79 @@ public class DetailActivity extends AppCompatActivity {
      */
     private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
 
-//  TODO (18) Create a String array containing the names of the desired data columns from our ContentProvider
-//  TODO (19) Create constant int values representing each column name's position above
-//  TODO (20) Create a constant int to identify our loader used in DetailActivity
+    //  COMPLETED (18) Create a String array containing the names of the desired data columns from our ContentProvider
+    public static final String[] WEATHER_DETAIL_PROJECTION = {
+            WeatherContract.WeatherEntry.COLUMN_DATE,
+            WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
+            WeatherContract.WeatherEntry.COLUMN_HUMIDITY,
+            WeatherContract.WeatherEntry.COLUMN_PRESSURE,
+            WeatherContract.WeatherEntry.COLUMN_WIND_SPEED,
+            WeatherContract.WeatherEntry.COLUMN_DEGREES,
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID
+    };
+
+    //  COMPLETED (19) Create constant int values representing each column name's position above
+    public static final int INDEX_WEATHER_DATE = 0;
+    public static final int INDEX_WEATHER_MAX_TEMP = 1;
+    public static final int INDEX_WEATHER_MIN_TEMP = 2;
+    public static final int INDEX_WEATHER_HUMIDITY = 3;
+    public static final int INDEX_WEATHER_PRESSURE = 4;
+    public static final int INDEX_WEATHER_WIND_SPEED = 5;
+    public static final int INDEX_WEATHER_DEGREES = 6;
+    public static final int INDEX_WEATHER_CONDITION_ID = 7;
+
+    //  COMPLETED (20) Create a constant int to identify our loader used in DetailActivity
+    private static final int ID_DETAIL_LOADER = 353;
+
 
     /* A summary of the forecast that can be shared by clicking the share button in the ActionBar */
     private String mForecastSummary;
 
-//  TODO (15) Declare a private Uri field called mUri
+    //  COMPLETED (15) Declare a private Uri field called mUri
+    private Uri mUri;
 
-//  TODO (10) Remove the mWeatherDisplay TextView declaration
-    private TextView mWeatherDisplay;
+//  COMPLETED (10) Remove the mWeatherDisplay TextView declaration
 
-//  TODO (11) Declare TextViews for the date, description, high, low, humidity, wind, and pressure
+    //  COMPLETED (11) Declare TextViews for the date, description, high, low, humidity, wind, and pressure
+    private TextView dateTextview, descTextview, highTextview,
+            lowTextview, humidityTextview,
+            windTextview, pressureTextview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-//      TODO (12) Remove mWeatherDisplay TextView
-        mWeatherDisplay = (TextView) findViewById(R.id.tv_display_weather);
-//      TODO (13) Find each of the TextViews by ID
+//      COMPLETED (12) Remove mWeatherDisplay TextView
+//      COMPLETED (13) Find each of the TextViews by ID
 
-//      TODO (14) Remove the code that checks for extra text
-        Intent intentThatStartedThisActivity = getIntent();
-        if (intentThatStartedThisActivity != null) {
-            if (intentThatStartedThisActivity.hasExtra(Intent.EXTRA_TEXT)) {
-                mForecastSummary = intentThatStartedThisActivity.getStringExtra(Intent.EXTRA_TEXT);
-                mWeatherDisplay.setText(mForecastSummary);
-            }
-        }
-//      TODO (16) Use getData to get a reference to the URI passed with this Activity's Intent
-//      TODO (17) Throw a NullPointerException if that URI is null
-//      TODO (35) Initialize the loader for DetailActivity
+        dateTextview = (TextView) findViewById(R.id.date);
+        descTextview = (TextView) findViewById(R.id.weather_description);
+        highTextview = (TextView) findViewById(R.id.high_temperature);
+        lowTextview = (TextView) findViewById(R.id.low_temperature);
+        humidityTextview = (TextView) findViewById(R.id.humidity);
+        windTextview = (TextView) findViewById(R.id.wind);
+        pressureTextview = (TextView) findViewById(R.id.pressure);
+
+//      COMPLETED (14) Remove the code that checks for extra text
+
+//      COMPLETED (16) Use getData to get a reference to the URI passed with this Activity's Intent
+        mUri = getIntent().getData();
+
+//      COMPLETED (17) Throw a NullPointerException if that URI is null
+        if (mUri == null) throw new NullPointerException("URI can't be null");
+
+//      COMPLETED (35) Initialize the loader for DetailActivity
+        getSupportLoaderManager().initLoader(ID_DETAIL_LOADER,null,this);
+
     }
 
     /**
      * This is where we inflate and set up the menu for this Activity.
      *
      * @param menu The options menu in which you place your items.
-     *
      * @return You must return true for the menu to be displayed;
-     *         if you return false it will not be shown.
-     *
+     * if you return false it will not be shown.
      * @see #onPrepareOptionsMenu
      * @see #onOptionsItemSelected
      */
@@ -93,7 +124,7 @@ public class DetailActivity extends AppCompatActivity {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
         MenuInflater inflater = getMenuInflater();
         /* Use the inflater's inflate method to inflate our menu layout to this menu */
-        inflater.inflate(R.menu.detail, menu);
+        inflater.inflate(R.menu.detail,menu);
         /* Return true so that the menu is displayed in the Toolbar */
         return true;
     }
@@ -104,7 +135,6 @@ public class DetailActivity extends AppCompatActivity {
      * DetailActivity's parent Activity in the AndroidManifest.
      *
      * @param item The menu item that was selected by the user
-     *
      * @return true if you handle the menu click here, false otherwise
      */
     @Override
@@ -114,7 +144,7 @@ public class DetailActivity extends AppCompatActivity {
 
         /* Settings menu item clicked */
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
+            startActivity(new Intent(this,SettingsActivity.class));
             return true;
         }
 
@@ -144,21 +174,103 @@ public class DetailActivity extends AppCompatActivity {
         return shareIntent;
     }
 
-//  TODO (22) Override onCreateLoader
-//          TODO (23) If the loader requested is our detail loader, return the appropriate CursorLoader
+    //  COMPLETED (22) Override onCreateLoader
+    @Override
+    public Loader<Cursor> onCreateLoader(int id,Bundle args) {
 
-//  TODO (24) Override onLoadFinished
-//      TODO (25) Check before doing anything that the Cursor has valid data
-//      TODO (26) Display a readable data string
-//      TODO (27) Display the weather description (using SunshineWeatherUtils)
-//      TODO (28) Display the high temperature
-//      TODO (29) Display the low temperature
-//      TODO (30) Display the humidity
-//      TODO (31) Display the wind speed and direction
-//      TODO (32) Display the pressure
-//      TODO (33) Store a forecast summary in mForecastSummary
+        switch (id) {
+
+//          COMPLETED (23) If the loader requested is our detail loader, return the appropriate CursorLoader
+            case ID_DETAIL_LOADER:
+
+                return new CursorLoader(this,
+                        mUri,
+                        WEATHER_DETAIL_PROJECTION,
+                        null,
+                        null,
+                        null);
+
+            default:
+                throw new RuntimeException("Loader Not Implemented yet: " + id);
+        }
+    }
+
+    //  COMPLETED (24) Override onLoadFinished
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader,Cursor data) {
+        //      COMPLETED (25) Check before doing anything that the Cursor has valid data
+
+        boolean cursorHasValidData = false;
+        if (data != null && data.moveToFirst()) {
+            /* We have valid data, continue on to bind the data to the UI */
+            cursorHasValidData = true;
+        }
+
+        if (!cursorHasValidData) {
+            /* No data to display, simply return and do nothing */
+            return;
+        }
+
+//      COMPLETEt (26) Display a readable data string
+        long localDateMidnightGmt = data.getLong(INDEX_WEATHER_DATE);
+        String dateText = SunshineDateUtils.getFriendlyDateString(this,localDateMidnightGmt,true);
+
+        dateTextview.setText(dateText);
+
+        //      COMPLETED (27) Display the weather description (using SunshineWeatherUtils)
+        int weatherId = data.getInt(INDEX_WEATHER_CONDITION_ID);
+        String description = SunshineWeatherUtils.getStringForWeatherCondition(this,weatherId);
+
+        descTextview.setText(description);
 
 
-//  TODO (34) Override onLoaderReset, but don't do anything in it yet
+        //      COMPLETED (28) Display the high temperature
+        double maxTemp = data.getDouble(INDEX_WEATHER_MAX_TEMP);
+        String maxTempAsString = SunshineWeatherUtils.formatTemperature(this,maxTemp);
+
+        highTextview.setText(maxTempAsString);
+
+
+//      COMPLETED (29) Display the low temperature
+
+        double minTemp = data.getDouble(INDEX_WEATHER_MIN_TEMP);
+        String minTempAsString = SunshineWeatherUtils.formatTemperature(this,minTemp);
+
+        lowTextview.setText(minTempAsString);
+
+
+//      COMPLETED (30) Display the humidity
+        float humidity = data.getFloat(INDEX_WEATHER_HUMIDITY);
+        String humidityAsString = getString(R.string.format_humidity,humidity);
+
+        humidityTextview.setText(humidityAsString);
+
+
+//      COMPLETED (31) Display the wind speed and direction
+        float windSpeed = data.getFloat(INDEX_WEATHER_WIND_SPEED);
+        float windDirection = data.getFloat(INDEX_WEATHER_DEGREES);
+        String windAsString = SunshineWeatherUtils.getFormattedWind(this,windSpeed,windDirection);
+
+        windTextview.setText(windAsString);
+
+
+//      COMPLETED (32) Display the pressure
+
+        float pressure = data.getFloat(INDEX_WEATHER_PRESSURE);
+        String pressureAsString = getString(R.string.format_pressure,pressure);
+        pressureTextview.setText(pressureAsString);
+
+        //      COMPLETED (33) Store a forecast summary in mForecastSummary
+        mForecastSummary = String.format("%s - %s - %s/%s",
+                dateText,description,maxTempAsString,minTempAsString);
+
+    }
+
+    //  COMPLETED (34) Override onLoaderReset, but don't do anything in it yet
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
 
 }
