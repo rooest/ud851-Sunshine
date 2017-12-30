@@ -37,16 +37,16 @@ public final class SunshinePreferences {
      * <p>
      * When the location details are updated, the database should to be cleared.
      *
-     * @param context  Context used to get the SharedPreferences
-     * @param lat      the latitude of the city
-     * @param lon      the longitude of the city
+     * @param context Context used to get the SharedPreferences
+     * @param lat     the latitude of the city
+     * @param lon     the longitude of the city
      */
-    public static void setLocationDetails(Context context, double lat, double lon) {
+    public static void setLocationDetails(Context context,double lat,double lon) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
 
-        editor.putLong(PREF_COORD_LAT, Double.doubleToRawLongBits(lat));
-        editor.putLong(PREF_COORD_LONG, Double.doubleToRawLongBits(lon));
+        editor.putLong(PREF_COORD_LAT,Double.doubleToRawLongBits(lat));
+        editor.putLong(PREF_COORD_LONG,Double.doubleToRawLongBits(lon));
         editor.apply();
     }
 
@@ -79,7 +79,7 @@ public final class SunshinePreferences {
         String keyForLocation = context.getString(R.string.pref_location_key);
         String defaultLocation = context.getString(R.string.pref_location_default);
 
-        return sp.getString(keyForLocation, defaultLocation);
+        return sp.getString(keyForLocation,defaultLocation);
     }
 
     /**
@@ -93,7 +93,7 @@ public final class SunshinePreferences {
 
         String keyForUnits = context.getString(R.string.pref_units_key);
         String defaultUnits = context.getString(R.string.pref_units_metric);
-        String preferredUnits = sp.getString(keyForUnits, defaultUnits);
+        String preferredUnits = sp.getString(keyForUnits,defaultUnits);
         String metric = context.getString(R.string.pref_units_metric);
 
         boolean userPrefersMetric = false;
@@ -127,9 +127,9 @@ public final class SunshinePreferences {
          * into the double itself.
          */
         preferredCoordinates[0] = Double
-                 .longBitsToDouble(sp.getLong(PREF_COORD_LAT, Double.doubleToRawLongBits(0.0)));
+                .longBitsToDouble(sp.getLong(PREF_COORD_LAT,Double.doubleToRawLongBits(0.0)));
         preferredCoordinates[1] = Double
-                .longBitsToDouble(sp.getLong(PREF_COORD_LONG, Double.doubleToRawLongBits(0.0)));
+                .longBitsToDouble(sp.getLong(PREF_COORD_LONG,Double.doubleToRawLongBits(0.0)));
 
         return preferredCoordinates;
     }
@@ -155,6 +155,22 @@ public final class SunshinePreferences {
         return spContainBothLatitudeAndLongitude;
     }
 
+
+    public static boolean areNotificationsEnabled(Context context) {
+        String displayNotificationsKey = context.getString(R.string.pref_enable_notifications_key);
+
+        boolean shouldDisplayNotificationsByDefault = context
+                .getResources()
+                .getBoolean(R.bool.default_value_for_showing_notifications);
+
+
+        boolean shouldDisplayNotifications = PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(displayNotificationsKey,shouldDisplayNotificationsByDefault);
+
+        return shouldDisplayNotifications;
+    }
+
+
     /**
      * Returns the last time that a notification was shown (in UNIX time)
      *
@@ -178,7 +194,7 @@ public final class SunshinePreferences {
          * time of the last notification was 0, the difference will always be greater than the
          * number of milliseconds in a day and we will show another notification.
          */
-        long lastNotificationTime = sp.getLong(lastNotificationKey, 0);
+        long lastNotificationTime = sp.getLong(lastNotificationKey,0);
 
         return lastNotificationTime;
     }
@@ -202,14 +218,14 @@ public final class SunshinePreferences {
      * Saves the time that a notification is shown. This will be used to get the ellapsed time
      * since a notification was shown.
      *
-     * @param context Used to access SharedPreferences
+     * @param context            Used to access SharedPreferences
      * @param timeOfNotification Time of last notification to save (in UNIX time)
      */
-    public static void saveLastNotificationTime(Context context, long timeOfNotification) {
+    public static void saveLastNotificationTime(Context context,long timeOfNotification) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
         String lastNotificationKey = context.getString(R.string.pref_last_notification);
-        editor.putLong(lastNotificationKey, timeOfNotification);
+        editor.putLong(lastNotificationKey,timeOfNotification);
         editor.apply();
     }
 }
